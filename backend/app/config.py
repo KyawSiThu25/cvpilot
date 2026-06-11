@@ -1,5 +1,6 @@
 """Application configuration loaded from environment variables."""
 
+# pyrefly: ignore [missing-import]
 from pydantic_settings import BaseSettings
 
 
@@ -7,7 +8,7 @@ class Settings(BaseSettings):
     """Central settings validated by Pydantic on startup."""
 
     hf_api_token: str
-    hf_model_id: str = "meta-llama/Meta-Llama-3-8B-Instruct"
+    hf_model_id: str = "mistralai/Mistral-7B-Instruct-v0.3"
     cors_origins: str = "http://localhost:3000"
     host: str = "0.0.0.0"
     port: int = 8000

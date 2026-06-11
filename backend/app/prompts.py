@@ -51,17 +51,18 @@ H1 heading and end with the last resume section.\
 """
 
 
-def build_user_prompt(user_profile_text: str, job_description: str) -> str:
+def build_user_prompt(user_profile_text: str, job_description: str, language: str = "en") -> str:
     """Construct the user message sent to the LLM.
 
     Args:
         user_profile_text: Pre-formatted string of the candidate's profile data.
         job_description: Raw text of the target job posting.
+        language: The target language ('en' or 'my').
 
     Returns:
         The complete user prompt.
     """
-    return (
+    prompt = (
         "## Candidate Profile\n\n"
         f"{user_profile_text}\n\n"
         "---\n\n"
@@ -70,6 +71,10 @@ def build_user_prompt(user_profile_text: str, job_description: str) -> str:
         "---\n\n"
         "Now generate the optimized, ATS-friendly resume in Markdown."
     )
+    if language == "my":
+        prompt += "\n\nCRITICAL REQUIREMENT: Please generate the entire optimized resume entirely in Burmese language (Myanmar script). The output must be perfectly formatted Markdown in Burmese."
+        
+    return prompt
 
 
 def format_profile_as_text(profile) -> str:
@@ -114,7 +119,11 @@ def format_profile_as_text(profile) -> str:
             degree = edu.get("degree", "N/A")
             institution = edu.get("institution", "N/A")
             grad = edu.get("graduation_date", "")
-            sections.append(f"- {degree}, {institution} ({grad})")
+            gpa = edu.get("gpa", "")
+            line = f"- {degree}, {institution} ({grad})"
+            if gpa:
+                line += f" — GPA: {gpa}"
+            sections.append(line)
 
     if profile.certifications:
         sections.append(f"\n**Certifications:** {', '.join(profile.certifications)}")
@@ -129,3 +138,81 @@ def format_profile_as_text(profile) -> str:
             sections.append(f"- **{name}**{tech_str}: {desc}")
 
     return "\n".join(sections)
+
+
+# ── ATS Score Prompt ───────────────────────────────────────────────
+
+ATS_SCORE_SYSTEM_PROMPT = """\
+You are **ATSAnalyzer**, an expert Applicant Tracking System analyst. Your job is to \
+evaluate how well a resume matches a specific job description from an ATS perspective.
+
+## Evaluation Categories
+Score each category from 0 to 100:
+
+1. **Keyword Match** — How many critical keywords, skills, and phrases from the job \
+   description appear in the resume?
+2. **Formatting & Structure** — Does the resume use standard section headings \
+   (Summary, Experience, Education, Skills)? Is it ATS-parseable (no tables, columns, \
+   images, or exotic characters)?
+3. **Experience Relevance** — How well does the candidate's experience align with the \
+   job requirements?
+4. **Skills Alignment** — Do the listed skills match what the job demands?
+5. **Impact & Metrics** — Are achievements quantified with numbers, percentages, or \
+   dollar amounts?
+
+## Output Format
+Return ONLY valid JSON with this exact structure — no markdown fencing, no commentary:
+
+{
+  "overall_score": <0-100>,
+  "categories": [
+    {"name": "Keyword Match", "score": <0-100>, "feedback": "<brief feedback>"},
+    {"name": "Formatting & Structure", "score": <0-100>, "feedback": "<brief feedback>"},
+    {"name": "Experience Relevance", "score": <0-100>, "feedback": "<brief feedback>"},
+    {"name": "Skills Alignment", "score": <0-100>, "feedback": "<brief feedback>"},
+    {"name": "Impact & Metrics", "score": <0-100>, "feedback": "<brief feedback>"}
+  ],
+  "matched_keywords": ["keyword1", "keyword2", ...],
+  "missing_keywords": ["keyword1", "keyword2", ...],
+  "suggestions": [
+    "Actionable suggestion 1",
+    "Actionable suggestion 2",
+    "Actionable suggestion 3"
+  ]
+}
+
+## Rules
+- Be objective and precise. Base scores on concrete evidence in the resume.
+- The overall_score should be a weighted average leaning toward Keyword Match and \
+  Skills Alignment (these matter most to ATS systems).
+- List 5–15 matched_keywords and 3–10 missing_keywords.
+- Provide 3–5 specific, actionable suggestions.
+- Return ONLY the JSON object. No preamble, no explanation.\
+"""
+
+
+def build_ats_score_prompt(resume_text: str, job_description: str, language: str = "en") -> str:
+    """Construct the user message for ATS score evaluation.
+
+    Args:
+        resume_text: The candidate's resume (plain text or Markdown).
+        job_description: The target job posting text.
+        language: The target language ('en' or 'my').
+
+    Returns:
+        The complete user prompt.
+    """
+    prompt = (
+        "## Resume\n\n"
+        f"{resume_text}\n\n"
+        "---\n\n"
+        "## Job Description\n\n"
+        f"{job_description}\n\n"
+        "---\n\n"
+        "Now analyze the resume against the job description and return the JSON score."
+    )
+    if language == "my":
+        prompt += "\n\nCRITICAL REQUIREMENT: Please evaluate and provide all your feedback, category names, and suggestions in Burmese language (Myanmar script) inside the JSON response."
+        
+    return prompt
+

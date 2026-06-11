@@ -1,36 +1,179 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CVPilot — AI Resume Tailor & ATS Analyzer
+
+CVPilot is an AI-powered web application that helps job seekers optimize their resumes for specific job postings. It uses open-source LLMs via the HuggingFace Inference API to generate ATS-friendly resumes and analyze keyword compatibility.
+
+## Features
+
+- **Resume Tailoring** — Input your profile and a job description; the AI generates an ATS-optimized resume in Markdown with targeted keywords, strong action verbs, and quantified achievements.
+- **ATS Score Checker** — Paste any resume and job description to get a detailed compatibility analysis: overall score, category breakdowns (keyword match, formatting, relevance, skills, impact), matched/missing keywords, and actionable suggestions.
+- **Structured Input** — Dynamic form with sections for personal info, skills, certifications, work experience, education (with GPA), and projects.
+- **Markdown Preview** — Live-rendered resume output with professional styling.
+- **Copy to Clipboard** — One-click copy of the raw Markdown output.
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 16, React 19, Tailwind CSS 4, TypeScript |
+| Backend | FastAPI, Uvicorn, Pydantic |
+| AI | HuggingFace Inference API (`huggingface_hub`) |
+| Model | Configurable — defaults to `Qwen/Qwen3.5-7B-Instruct` |
+
+## Project Structure
+
+```
+cvpilot/
+├── src/app/                    # Next.js frontend
+│   ├── layout.tsx              # Root layout with Inter font + SEO
+│   ├── globals.css             # Design system (dark mode, glassmorphism)
+│   ├── page.tsx                # Resume tailor page
+│   └── ats-score/
+│       └── page.tsx            # ATS score checker page
+│
+├── backend/                    # FastAPI backend
+│   ├── main.py                 # App entry point, CORS, health check
+│   ├── requirements.txt        # Python dependencies
+│   ├── .env                    # Environment config (gitignored)
+│   └── app/
+│       ├── config.py           # Pydantic-settings (.env loader)
+│       ├── schemas.py          # Request/response models
+│       ├── prompts.py          # LLM system prompts
+│       └── routes.py           # API endpoints
+│
+├── package.json                # Node dependencies
+└── README.md
+```
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- **Node.js** ≥ 18
+- **Python** ≥ 3.10
+- A **HuggingFace API token** — get one at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+
+### 1. Clone & Install Frontend
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/your-username/cvpilot.git
+cd cvpilot
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Set Up Backend
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cd backend
+python -m venv venv
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Windows
+venv\Scripts\activate
 
-## Learn More
+# macOS / Linux
+source venv/bin/activate
 
-To learn more about Next.js, take a look at the following resources:
+pip install -r requirements.txt
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3. Configure Environment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Create `backend/.env` (or edit the existing one):
 
-## Deploy on Vercel
+```env
+HF_API_TOKEN=hf_your_token_here
+HF_MODEL_ID=Qwen/Qwen3.5-7B-Instruct
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+HOST=0.0.0.0
+PORT=8000
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. Run Both Servers
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Terminal 1 — Backend
+cd backend
+python main.py
+# → http://localhost:8000
+
+# Terminal 2 — Frontend
+npm run dev
+# → http://localhost:3000
+```
+
+## API Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/` | Health check |
+| `POST` | `/api/tailor-resume` | Generate an ATS-optimized resume |
+| `POST` | `/api/ats-score` | Analyze resume-to-JD compatibility |
+| `GET` | `/docs` | Swagger UI (interactive API docs) |
+| `GET` | `/redoc` | ReDoc (alternative API docs) |
+
+### `POST /api/tailor-resume`
+
+**Request body:**
+```json
+{
+  "user_profile": {
+    "full_name": "Jane Smith",
+    "email": "jane@example.com",
+    "phone": "+1 555-123-4567",
+    "location": "San Francisco, CA",
+    "summary": "Senior software engineer with 5 years...",
+    "skills": ["Python", "React", "AWS"],
+    "experience": [
+      {
+        "title": "Software Engineer",
+        "company": "Acme Corp",
+        "start_date": "Jan 2021",
+        "end_date": "Present",
+        "description": "Led development of..."
+      }
+    ],
+    "education": [
+      {
+        "degree": "B.S. Computer Science",
+        "institution": "MIT",
+        "graduation_date": "2020",
+        "gpa": "3.9/4.0"
+      }
+    ],
+    "certifications": ["AWS Solutions Architect"],
+    "projects": []
+  },
+  "job_description": "We are looking for a senior engineer..."
+}
+```
+
+**Response:** Tailored resume in Markdown + model ID.
+
+### `POST /api/ats-score`
+
+**Request body:**
+```json
+{
+  "resume_text": "# Jane Smith\n\n## Summary\n...",
+  "job_description": "We are looking for a senior engineer..."
+}
+```
+
+**Response:** Overall score (0–100), category breakdowns, matched/missing keywords, and suggestions.
+
+## Switching Models
+
+You can use any chat model available on the [HuggingFace Inference API](https://huggingface.co/docs/api-inference/). Update `HF_MODEL_ID` in `backend/.env`:
+
+```env
+# Confirmed working options:
+HF_MODEL_ID=Qwen/Qwen3.5-7B-Instruct
+HF_MODEL_ID=mistralai/Mistral-7B-Instruct-v0.2
+HF_MODEL_ID=microsoft/Phi-3-mini-4k-instruct
+HF_MODEL_ID=google/gemma-2-2b-it
+```
+
+> **Note:** Gated models (e.g. Meta Llama) require you to accept their license on HuggingFace before the API will serve them.
+
+## License
+
+MIT
