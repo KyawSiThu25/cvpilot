@@ -7,8 +7,8 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """Central settings validated by Pydantic on startup."""
 
-    hf_api_token: str
-    hf_model_id: str = "mistralai/Mistral-7B-Instruct-v0.3"
+    gemini_api_key: str
+    gemini_model_id: str = "gemini-2.5-flash"
     cors_origins: str = "http://localhost:3000"
     host: str = "0.0.0.0"
     port: int = 8000

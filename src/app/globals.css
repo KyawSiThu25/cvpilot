@@ -205,41 +205,43 @@ textarea.input-field {
 
 .prose-resume h2 {
   font-family: var(--font-heading);
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 400;
   font-style: italic;
   color: var(--text-secondary);
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
+  margin-top: 2em;
+  margin-bottom: 1em;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .prose-resume h3 {
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-top: 1em;
-  margin-bottom: 0.25em;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
 }
 
 .prose-resume p {
-  margin-bottom: 0.6em;
+  margin-bottom: 1em;
   color: var(--text-secondary);
+  line-height: 1.6;
 }
 
 .prose-resume ul {
   list-style: none;
   padding-left: 0;
-  margin: 0.4em 0;
+  margin: 0.8em 0 1.5em 0;
 }
 
 .prose-resume ul li {
   position: relative;
-  padding-left: 1.2em;
-  margin-bottom: 0.35em;
+  padding-left: 1.5em;
+  margin-bottom: 0.7em;
   color: var(--text-secondary);
+  line-height: 1.6;
 }
 
 .prose-resume ul li::before {
@@ -333,4 +335,113 @@ textarea.input-field {
   height: 6px;
   border-radius: 50%;
   background: var(--success);
+}
+
+/* ─────────────────── Templates ─────────────────── */
+
+/* Modern */
+.prose-resume.template-modern {
+  font-family: 'DM Sans', sans-serif;
+}
+.prose-resume.template-modern h1 {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  border-bottom: 3px solid var(--accent);
+  color: var(--accent-dark);
+}
+.prose-resume.template-modern h2 {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-style: normal;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1.1rem;
+}
+
+/* Classic */
+.prose-resume.template-classic {
+  font-family: 'Times New Roman', Times, serif;
+}
+.prose-resume.template-classic h1 {
+  font-family: 'Times New Roman', Times, serif;
+  text-align: center;
+  border-bottom: 1px solid black;
+  color: black;
+}
+.prose-resume.template-classic h2 {
+  font-family: 'Times New Roman', Times, serif;
+  text-transform: uppercase;
+  font-style: normal;
+  border-bottom: 1px solid black;
+  color: black;
+  text-align: center;
+}
+.prose-resume.template-classic h3 {
+  font-family: 'Times New Roman', Times, serif;
+  color: black;
+}
+.prose-resume.template-classic p, 
+.prose-resume.template-classic li {
+  color: black;
+}
+.prose-resume.template-classic ul li::before {
+  content: "•";
+  color: black;
+}
+
+/* Minimal */
+.prose-resume.template-minimal {
+  font-family: 'DM Sans', sans-serif;
+  color: #333;
+}
+.prose-resume.template-minimal h1 {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  border-bottom: none;
+  font-size: 2.2rem;
+  letter-spacing: 0.1em;
+  color: #111;
+  margin-bottom: 1rem;
+}
+.prose-resume.template-minimal h2 {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-style: normal;
+  border-bottom: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #555;
+  font-size: 0.85rem;
+  margin-top: 2.5em;
+  margin-bottom: 1.5em;
+}
+.prose-resume.template-minimal h3 {
+  font-weight: 700;
+  color: #222;
+  font-size: 1rem;
+}
+.prose-resume.template-minimal ul li::before {
+  content: "-";
+  color: #999;
+}
+
+/* ─────────────────── Print Settings ─────────────────── */
+@media print {
+  .prose-resume {
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  .prose-resume h2,
+  .prose-resume h3 {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .prose-resume h2, 
+  .prose-resume h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
 }

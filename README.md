@@ -17,7 +17,7 @@ CVPilot is an AI-powered web application that helps job seekers optimize their r
 | Frontend | Next.js 16, React 19, Tailwind CSS 4, TypeScript |
 | Backend | FastAPI, Uvicorn, Pydantic |
 | AI | HuggingFace Inference API (`huggingface_hub`) |
-| Model | Configurable — defaults to `Qwen/Qwen3.5-7B-Instruct` |
+| Model | Configurable — defaults to `Cannae-AI/Gemini-3.1-pro-Gemma-4-E4B-Distill-gguf` |
 
 ## Project Structure
 
@@ -81,7 +81,7 @@ Create `backend/.env` (or edit the existing one):
 
 ```env
 HF_API_TOKEN=hf_your_token_here
-HF_MODEL_ID=Qwen/Qwen3.5-7B-Instruct
+HF_MODEL_ID=Cannae-AI/Gemini-3.1-pro-Gemma-4-E4B-Distill-gguf
 CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 HOST=0.0.0.0
 PORT=8000
@@ -166,7 +166,7 @@ You can use any chat model available on the [HuggingFace Inference API](https://
 
 ```env
 # Confirmed working options:
-HF_MODEL_ID=Qwen/Qwen3.5-7B-Instruct
+HF_MODEL_ID=Cannae-AI/Gemini-3.1-pro-Gemma-4-E4B-Distill-gguf
 HF_MODEL_ID=mistralai/Mistral-7B-Instruct-v0.2
 HF_MODEL_ID=microsoft/Phi-3-mini-4k-instruct
 HF_MODEL_ID=google/gemma-2-2b-it

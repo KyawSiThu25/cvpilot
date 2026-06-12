@@ -12,7 +12,7 @@ candidates = [
     "HuggingFaceH4/zephyr-7b-beta",
     "mistralai/Mistral-7B-Instruct-v0.2",
     "microsoft/Phi-3-mini-4k-instruct",
-    "Qwen/Qwen3.5-7B-Instruct",
+    "Cannae-AI/Gemini-3.1-pro-Gemma-4-E4B-Distill-gguf",
     "google/gemma-2-2b-it",
     "tiiuae/falcon-7b-instruct",
 ]

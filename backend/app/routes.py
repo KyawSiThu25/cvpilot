@@ -5,7 +5,8 @@ import logging
 import re
 
 from fastapi import APIRouter, HTTPException, status
-from huggingface_hub import InferenceClient
+from google import genai
+from google.genai import types
 
 from app.config import settings
 from app.prompts import (
@@ -26,8 +27,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["Resume"])
 
-# Initialise the HF Inference Client once at module level
-_client = InferenceClient(token=settings.hf_api_token)
+_client = genai.Client(api_key=settings.gemini_api_key)
 
 
 @router.post(
@@ -52,25 +52,23 @@ async def tailor_resume(payload: TailorResumeRequest) -> TailorResumeResponse:
     profile_text = format_profile_as_text(payload.user_profile)
     user_prompt = build_user_prompt(profile_text, payload.job_description, payload.language)
 
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": user_prompt},
-    ]
-
-    model_id = settings.hf_model_id
+    model_id = settings.gemini_model_id
 
     try:
-        logger.info("Calling HF Inference API with model=%s", model_id)
+        logger.info("Calling Google GenAI API with model=%s", model_id)
 
-        response = _client.chat_completion(
+        response = _client.models.generate_content(
             model=model_id,
-            messages=messages,
-            max_tokens=8192,
-            temperature=0.5,
-            top_p=0.9,
+            contents=user_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                max_output_tokens=8192,
+                temperature=0.5,
+                top_p=0.9,
+            )
         )
 
-        tailored_text = response.choices[0].message.content
+        tailored_text = response.text
 
         if not tailored_text or not tailored_text.strip():
             raise HTTPException(
@@ -88,7 +86,7 @@ async def tailor_resume(payload: TailorResumeRequest) -> TailorResumeResponse:
     except HTTPException:
         raise  # Re-raise our own HTTP exceptions
     except Exception as exc:
-        logger.exception("HuggingFace Inference API call failed")
+        logger.exception("Google GenAI API call failed")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Failed to generate tailored resume: {exc}",
@@ -141,25 +139,23 @@ async def ats_score(payload: ATSScoreRequest) -> ATSScoreResponse:
     """Evaluate how well a resume matches a job description for ATS systems."""
     user_prompt = build_ats_score_prompt(payload.resume_text, payload.job_description, payload.language)
 
-    messages = [
-        {"role": "system", "content": ATS_SCORE_SYSTEM_PROMPT},
-        {"role": "user", "content": user_prompt},
-    ]
-
-    model_id = settings.hf_model_id
+    model_id = settings.gemini_model_id
 
     try:
-        logger.info("Calling HF Inference API for ATS score with model=%s", model_id)
+        logger.info("Calling Google GenAI API for ATS score with model=%s", model_id)
 
-        response = _client.chat_completion(
+        response = _client.models.generate_content(
             model=model_id,
-            messages=messages,
-            max_tokens=8192,
-            temperature=0.3,
-            top_p=0.9,
+            contents=user_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=ATS_SCORE_SYSTEM_PROMPT,
+                max_output_tokens=8192,
+                temperature=0.3,
+                top_p=0.9,
+            )
         )
 
-        raw_text = response.choices[0].message.content
+        raw_text = response.text
 
         if not raw_text or not raw_text.strip():
             raise HTTPException(
@@ -189,7 +185,7 @@ async def ats_score(payload: ATSScoreRequest) -> ATSScoreResponse:
             detail=f"Model returned invalid JSON: {exc}",
         ) from exc
     except Exception as exc:
-        logger.exception("HuggingFace Inference API call failed for ATS score")
+        logger.exception("Google GenAI API call failed for ATS score")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Failed to generate ATS score: {exc}",

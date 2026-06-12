@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "./components/LanguageContext";
-import ReactMarkdown from "react-markdown";
 
 /* ────────────────────── Types ────────────────────── */
 
@@ -87,7 +87,7 @@ export default function Home() {
   const [modelUsed, setModelUsed] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const router = useRouter();
 
   /* ── Field updaters ── */
 
@@ -229,23 +229,14 @@ export default function Home() {
       }
 
       const data = await res.json();
-      setResult(data.tailored_resume);
-      setModelUsed(data.model_used || "");
+      sessionStorage.setItem("tailored_resume", data.tailored_resume);
+      router.push("/preview");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
   }, [form]);
-
-  /* ── Copy ── */
-
-  const handleCopy = useCallback(async () => {
-    if (!result) return;
-    await navigator.clipboard.writeText(result);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, [result]);
 
   /* ── Validation ── */
   const isValid =
@@ -304,8 +295,7 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-8">
-        {/* ═══════════ LEFT — Form ═══════════ */}
+      <div className="max-w-3xl mx-auto">
         <div className="space-y-5">
           {/* Personal Info */}
           <section className="glass-card p-5">
@@ -785,112 +775,15 @@ export default function Home() {
               language === "my" ? "ကိုယ်ရေးမှတ်တမ်းကို ပြင်ဆင်မည် →" : "Tailor My Resume →"
             )}
           </button>
-        </div>
 
-        {/* ═══════════ RIGHT — Result ═══════════ */}
-        <div className="lg:sticky lg:top-20 lg:self-start">
-          <div className="glass-card p-6 min-h-[400px] flex flex-col">
-            {/* Panel Header */}
-            <div className="flex items-center justify-between mb-4">
-              <h2
-                style={{
-                  fontFamily: "var(--font-heading)",
-                  fontSize: "1.25rem",
-                  color: "var(--text-primary)",
-                }}
-              >
-                {language === "my" ? "ပြင်ဆင်ထားသော ကိုယ်ရေးမှတ်တမ်း" : "Tailored Resume"}
-              </h2>
-
-              <div className="flex items-center gap-2">
-                {result && (
-                  <>
-                    {modelUsed && (
-                      <span className="status-badge success">
-                        <span className="pulse-dot" />
-                        {modelUsed.split("/").pop()}
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={handleCopy}
-                    >
-                      {copied ? (language === "my" ? "ကူးယူပြီးပါပြီ ✓" : "Copied ✓") : (language === "my" ? "ကူးယူမည်" : "Copy")}
-                    </button>
-                  </>
-                )}
-              </div>
+          {error && (
+            <div className="mt-4 p-4 glass-card" style={{ borderColor: 'var(--error)' }}>
+              <div className="status-badge error" style={{ marginBottom: "12px" }}>Error</div>
+              <p style={{ fontSize: "0.85rem", color: "var(--error)" }}>
+                {error}
+              </p>
             </div>
-
-            <div className="section-divider" />
-
-            {/* Content */}
-            <div className="flex-1">
-              {loading && (
-                <div className="flex flex-col items-center justify-center h-64 gap-4">
-                  <div className="spinner" style={{ width: 28, height: 28 }} />
-                  <p
-                    style={{
-                      fontSize: "0.85rem",
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    {language === "my" ? "ATS-အကောင်းဆုံးဖြစ်စေရန် ပြင်ဆင်နေပါသည်..." : "Crafting your ATS-optimized resume…"}
-                  </p>
-                </div>
-              )}
-
-              {error && (
-                <div>
-                  <div className="status-badge error" style={{ marginBottom: "12px" }}>Error</div>
-                  <p style={{ fontSize: "0.85rem", color: "var(--error)" }}>
-                    {error}
-                  </p>
-                </div>
-              )}
-
-              {result && !loading && (
-                <div className="prose-resume">
-                  <ReactMarkdown>{result}</ReactMarkdown>
-                </div>
-              )}
-
-              {!result && !loading && !error && (
-                <div className="flex flex-col items-center justify-center h-64 gap-3 text-center">
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      border: "2px solid var(--border-subtle)",
-                      borderRadius: "var(--radius-sm)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.2rem",
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    ↗
-                  </div>
-                  <p
-                    style={{
-                      fontSize: "0.85rem",
-                      color: "var(--text-muted)",
-                      maxWidth: "260px",
-                      lineHeight: "1.6",
-                    }}
-                  >
-                    {language === "my" ? "သင့်ကိုယ်ရေးအချက်အလက်များကို ဖြည့်စွက်ပြီး အလုပ်ခေါ်စာကို paste လုပ်ပါ။ ထို့နောက် " : "Fill in your profile and paste a job description, then hit " }
-                    <strong style={{ color: "var(--text-secondary)" }}>
-                      {language === "my" ? "ကိုယ်ရေးမှတ်တမ်းကို ပြင်ဆင်မည်" : "Tailor My Resume"}
-                    </strong>{" "}
-                    {language === "my" ? "ကိုနှိပ်ပါ။" : "to see the result."}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </main>
