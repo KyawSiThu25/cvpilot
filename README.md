@@ -23,15 +23,18 @@ CVPilot is an AI-powered web application that helps job seekers optimize their r
 
 ```
 cvpilot/
-├── src/app/                    # Next.js frontend
-│   ├── layout.tsx              # Root layout with Inter font + SEO
-│   ├── globals.css             # Design system (dark mode, glassmorphism)
-│   ├── page.tsx                # Resume tailor page
-│   └── ats-score/
-│       └── page.tsx            # ATS score checker page
+├── frontend/                   # Next.js frontend
+│   ├── src/app/                # App router
+│   │   ├── layout.tsx          # Root layout with Inter font + SEO
+│   │   ├── globals.css         # Design system (dark mode, glassmorphism)
+│   │   ├── page.tsx            # Resume tailor page
+│   │   └── ats-score/
+│   │       └── page.tsx        # ATS score checker page
+│   └── package.json            # Node dependencies
 │
 ├── backend/                    # FastAPI backend
 │   ├── main.py                 # App entry point, CORS, health check
+│   ├── check_token.py          # Utility script to test HF models
 │   ├── requirements.txt        # Python dependencies
 │   ├── .env                    # Environment config (gitignored)
 │   └── app/
@@ -40,7 +43,6 @@ cvpilot/
 │       ├── prompts.py          # LLM system prompts
 │       └── routes.py           # API endpoints
 │
-├── package.json                # Node dependencies
 └── README.md
 ```
 
@@ -55,8 +57,8 @@ cvpilot/
 ### 1. Clone & Install Frontend
 
 ```bash
-git clone https://github.com/your-username/cvpilot.git
-cd cvpilot
+git clone https://github.com/KyawSiThu25/cvpilot.git
+cd cvpilot/frontend
 npm install
 ```
 
@@ -96,6 +98,7 @@ python main.py
 # → http://localhost:8000
 
 # Terminal 2 — Frontend
+cd frontend
 npm run dev
 # → http://localhost:3000
 ```
