@@ -21,7 +21,7 @@ interface ATSResult {
   model_used: string;
 }
 
-const API_URL = "http://localhost:8000/api/ats-score";
+const API_URL = "/api/ats-score";
 
 /* ────────────────────── Helpers ────────────────────── */
 

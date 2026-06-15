@@ -77,7 +77,7 @@ const INITIAL_FORM: FormState = {
   job_description: "",
 };
 
-const API_URL = "http://localhost:8000/api/tailor-resume";
+const API_URL = "/api/tailor-resume";
 
 function formatFormToRawResume(form: FormState): string {
   const parts = [];
