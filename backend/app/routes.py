@@ -1,5 +1,6 @@
 """Resume tailoring and ATS scoring routes."""
 
+import asyncio
 import json
 import logging
 import re
@@ -57,16 +58,25 @@ async def tailor_resume(payload: TailorResumeRequest) -> TailorResumeResponse:
     try:
         logger.info("Calling Google GenAI API with model=%s", model_id)
 
-        response = _client.models.generate_content(
-            model=model_id,
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                max_output_tokens=8192,
-                temperature=0.5,
-                top_p=0.9,
-            )
-        )
+        for attempt in range(3):
+            try:
+                response = await asyncio.to_thread(
+                    _client.models.generate_content,
+                    model=model_id,
+                    contents=user_prompt,
+                    config=types.GenerateContentConfig(
+                        system_instruction=SYSTEM_PROMPT,
+                        max_output_tokens=8192,
+                        temperature=0.5,
+                        top_p=0.9,
+                    )
+                )
+                break
+            except Exception as e:
+                if attempt == 2 or ("503" not in str(e) and "429" not in str(e)):
+                    raise
+                logger.warning("Gemini API overloaded/503, retrying in 2 seconds... (attempt %d/3)", attempt + 1)
+                await asyncio.sleep(2)
 
         tailored_text = response.text
 
@@ -144,16 +154,25 @@ async def ats_score(payload: ATSScoreRequest) -> ATSScoreResponse:
     try:
         logger.info("Calling Google GenAI API for ATS score with model=%s", model_id)
 
-        response = _client.models.generate_content(
-            model=model_id,
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=ATS_SCORE_SYSTEM_PROMPT,
-                max_output_tokens=8192,
-                temperature=0.3,
-                top_p=0.9,
-            )
-        )
+        for attempt in range(3):
+            try:
+                response = await asyncio.to_thread(
+                    _client.models.generate_content,
+                    model=model_id,
+                    contents=user_prompt,
+                    config=types.GenerateContentConfig(
+                        system_instruction=ATS_SCORE_SYSTEM_PROMPT,
+                        max_output_tokens=8192,
+                        temperature=0.3,
+                        top_p=0.9,
+                    )
+                )
+                break
+            except Exception as e:
+                if attempt == 2 or ("503" not in str(e) and "429" not in str(e)):
+                    raise
+                logger.warning("Gemini API overloaded/503 for ATS score, retrying in 2 seconds... (attempt %d/3)", attempt + 1)
+                await asyncio.sleep(2)
 
         raw_text = response.text
 

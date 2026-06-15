@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useLanguage } from "../components/LanguageContext";
+import { getSessionItem } from "../utils/session";
 
 /* ────────────────────── Types ────────────────────── */
 
@@ -169,6 +170,31 @@ export default function ATSScorePage() {
   const [result, setResult] = useState<ATSResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const savedJobDesc = getSessionItem("job_description");
+    if (savedJobDesc) {
+      setJobDescription(savedJobDesc);
+    }
+
+    const savedTailored = getSessionItem("tailored_resume");
+    const savedRaw = getSessionItem("raw_resume");
+    
+    if (savedTailored) {
+      setResumeText(savedTailored);
+    } else if (savedRaw) {
+      setResumeText(savedRaw);
+    }
+  }, []);
+
+  // Save changes back to session storage
+  useEffect(() => {
+    if (jobDescription.trim()) {
+      import("../utils/session").then(({ setSessionItem }) => {
+        setSessionItem("job_description", jobDescription);
+      });
+    }
+  }, [jobDescription]);
 
   const handleSubmit = useCallback(async () => {
     setLoading(true);

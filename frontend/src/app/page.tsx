@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "./components/LanguageContext";
+import { setSessionItem, getSessionItem } from "./utils/session";
 
 /* ────────────────────── Types ────────────────────── */
 
@@ -78,6 +79,34 @@ const INITIAL_FORM: FormState = {
 
 const API_URL = "http://localhost:8000/api/tailor-resume";
 
+function formatFormToRawResume(form: FormState): string {
+  const parts = [];
+  if (form.full_name) parts.push(form.full_name);
+  if (form.email || form.phone || form.location) {
+    parts.push([form.email, form.phone, form.location].filter(Boolean).join(" | "));
+  }
+  if (form.summary) parts.push(`Summary:\n${form.summary}`);
+  if (form.skills) parts.push(`Skills:\n${form.skills}`);
+  if (form.certifications) parts.push(`Certifications:\n${form.certifications}`);
+  
+  const exps = form.experience.filter(e => e.title || e.company);
+  if (exps.length > 0) {
+    parts.push("Experience:\n" + exps.map(e => `${e.title} at ${e.company} (${e.start_date} - ${e.end_date})\n${e.description}`).join("\n\n"));
+  }
+
+  const edus = form.education.filter(e => e.degree || e.institution);
+  if (edus.length > 0) {
+    parts.push("Education:\n" + edus.map(e => `${e.degree} from ${e.institution} (${e.graduation_date}) - GPA: ${e.gpa}`).join("\n"));
+  }
+
+  const projs = form.projects.filter(p => p.name);
+  if (projs.length > 0) {
+    parts.push("Projects:\n" + projs.map(p => `${p.name} [${Array.isArray(p.technologies) ? p.technologies.join(", ") : p.technologies}]\n${p.description}`).join("\n\n"));
+  }
+
+  return parts.join("\n\n");
+}
+
 /* ────────────────────── Page Component ────────────────────── */
 
 export default function Home() {
@@ -88,6 +117,25 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  /* ── Save to Session ── */
+  useEffect(() => {
+    const rawResume = formatFormToRawResume(form);
+    if (rawResume.trim()) {
+      setSessionItem("raw_resume", rawResume);
+    }
+    if (form.job_description.trim()) {
+      setSessionItem("job_description", form.job_description);
+    }
+  }, [form]);
+
+  /* ── Load from Session ── */
+  useEffect(() => {
+    const savedJobDesc = getSessionItem("job_description");
+    if (savedJobDesc) {
+      setForm((prev) => ({ ...prev, job_description: savedJobDesc }));
+    }
+  }, []);
 
   /* ── Field updaters ── */
 
@@ -229,7 +277,7 @@ export default function Home() {
       }
 
       const data = await res.json();
-      sessionStorage.setItem("tailored_resume", data.tailored_resume);
+      setSessionItem("tailored_resume", data.tailored_resume);
       router.push("/preview");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
