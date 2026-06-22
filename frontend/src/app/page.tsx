@@ -40,6 +40,7 @@ interface FormState {
   education: EducationEntry[];
   projects: ProjectEntry[];
   job_description: string;
+  profile_photo?: string;
 }
 
 const INITIAL_EXPERIENCE: ExperienceEntry = {
@@ -75,6 +76,7 @@ const INITIAL_FORM: FormState = {
   education: [{ ...INITIAL_EDUCATION }],
   projects: [],
   job_description: "",
+  profile_photo: "",
 };
 
 const API_URL = "http://localhost:8000/api/tailor-resume";
@@ -126,6 +128,9 @@ export default function Home() {
     }
     if (form.job_description.trim()) {
       setSessionItem("job_description", form.job_description);
+    }
+    if (form.profile_photo) {
+      setSessionItem("profile_photo", form.profile_photo);
     }
   }, [form]);
 
@@ -410,6 +415,34 @@ export default function Home() {
                   value={form.location}
                   onChange={(e) => updateField("location", e.target.value)}
                 />
+              </div>
+              <div className="sm:col-span-2">
+                <label htmlFor="photo" className="field-label">
+                  {language === "my" ? "ပရိုဖိုင် ဓာတ်ပုံ" : "Profile Photo"}
+                </label>
+                <input
+                  id="photo"
+                  type="file"
+                  accept="image/*"
+                  className="input-field bg-white"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        updateField("profile_photo", reader.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    } else {
+                      updateField("profile_photo", "");
+                    }
+                  }}
+                />
+                {form.profile_photo && (
+                  <div className="mt-2">
+                    <img src={form.profile_photo} alt="Profile Preview" className="w-16 h-16 object-cover rounded-full border border-gray-300" />
+                  </div>
+                )}
               </div>
             </div>
 

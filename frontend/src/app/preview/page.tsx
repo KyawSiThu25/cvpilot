@@ -8,6 +8,7 @@ import { getSessionItem } from "../utils/session";
 
 export default function PreviewPage() {
   const [result, setResult] = useState<string | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [template, setTemplate] = useState<"modern" | "two-column-dark" | "minimalist">("modern");
   const [margin, setMargin] = useState<number>(20); // default 20mm
   const router = useRouter();
@@ -19,6 +20,10 @@ export default function PreviewPage() {
       router.push("/");
     } else {
       setResult(saved);
+      const photo = getSessionItem("profile_photo");
+      if (photo) {
+        setProfilePhoto(photo);
+      }
     }
   }, [router]);
 
@@ -74,6 +79,13 @@ export default function PreviewPage() {
           </div>
 
           <button 
+            onClick={() => router.push("/ats-score")}
+            className="btn-secondary"
+          >
+            Test ATS Score
+          </button>
+
+          <button 
             onClick={() => reactToPrintFn()}
             className="btn-primary"
           >
@@ -90,7 +102,7 @@ export default function PreviewPage() {
           style={template === "modern" ? { padding: `${margin}mm` } : {}}
         >
           {template === "modern" && <ReactMarkdown>{result}</ReactMarkdown>}
-          {template === "two-column-dark" && <TwoColumnDarkTemplate result={result} margin={margin} />}
+          {template === "two-column-dark" && <TwoColumnDarkTemplate result={result} margin={margin} profilePhoto={profilePhoto} />}
           {template === "minimalist" && <MinimalistTemplate result={result} margin={margin} />}
         </div>
       </div>
@@ -139,7 +151,7 @@ function parseResumeMarkdown(markdown: string) {
   return { name, contactLines, sections };
 }
 
-const TwoColumnDarkTemplate = ({ result, margin }: { result: string, margin: number }) => {
+const TwoColumnDarkTemplate = ({ result, margin, profilePhoto }: { result: string, margin: number, profilePhoto?: string | null }) => {
   const { name, contactLines, sections } = parseResumeMarkdown(result);
   const leftKeywords = ['skill', 'cert', 'hobb', 'contact', 'language'];
   const leftSections = sections.filter(s => leftKeywords.some(k => s.title.toLowerCase().includes(k)));
@@ -153,7 +165,11 @@ const TwoColumnDarkTemplate = ({ result, margin }: { result: string, margin: num
     <div className="flex bg-white text-left font-sans" style={{ minHeight: '100%', padding: `${margin}mm`, boxSizing: 'border-box' }}>
       <div className="w-1/3 bg-[#3d3835] text-white p-6 rounded-l-lg">
          <div className="w-32 h-32 bg-[#E58F40] rounded-3xl mx-auto mb-8 border-4 border-[#3d3835] shadow-lg overflow-hidden flex items-center justify-center">
-            <span className="text-5xl text-white font-bold">{firstName[0]}</span>
+           {profilePhoto ? (
+             <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+           ) : (
+             <span className="text-5xl text-white font-bold">{firstName[0]}</span>
+           )}
          </div>
          
          <div className="mb-8">
